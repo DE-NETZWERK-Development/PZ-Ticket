@@ -1,4 +1,4 @@
-## <p align="center"><img src="https://github.com/PLANET-ZER0-Development/.github/blob/615e00335a2e27c968b18a07e783500113a4c0f3/profile/230403.png" style="height:200px"> <p align="center">PZ🎫Ticket</p></p>
+## <p align="center"><img src="https://github.com/PLANET-ZER0-Development/.github/blob/412aaddd3fd44e9772d3a14a707c53ffb871ce60/profile/230403.png" style="height:200px"> <p align="center">PZ🎫Ticket</p></p>
 
 <img src="https://github.com/PLANET-ZER0-Development/.github/blob/4f579f203797fd56be1f46a9fa74eb00124b91d9/profile/Logo.png" alt="Alt-Text" title="Logo" />
 Der <a href="https://discord.gg/JpStcqah5y">PZ🎫Ticket Bot</a> ist ein Öffentlicher Ticket Bot welcher auf dem <a href="https://discord.gg/JpStcqah5y">🪐 | PLΛNΞT ZΞR0<a> Discord Server Supported wird.
