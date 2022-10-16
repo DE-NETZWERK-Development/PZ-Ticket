@@ -24,6 +24,12 @@ module.exports.ticketsystem = class {
      * @param {boolean} options.modmail
      * @param {boolean} options.voice
      * 
+     * @param {object} options.ticketsettings
+     * @param {object} options.modmailsettings
+     * @param {object} options.voicesettings
+     * 
+     * @param {string} options.ticketsettings.ticketname Um Strings Abzufangen: ?uname? -> Username im ticketname | ?id?    -> Ticketid im ticketname | ?thema? -> Ticketthema im ticketname | -> Ticketname spiegelt den namen des Ticketchannels wieder
+     * 
      * @param {String} options.status.name
      * @param {ClientPresenceStatus} options.status.type
      * @param {Boolean} options.status.afk
@@ -62,6 +68,9 @@ module.exports.ticketsystem = class {
         if (!options.ticket) { options.ticket = false }
         if (!options.modmail) { options.modmail = false }
         if (!options.voice) { options.voice = false }
+        if( options.ticket == true && (!options.ticketsettings || !options.ticketsettings.ticketname)) { throw new TypeError("Keine Ticketsettings angegeben") }
+        if( options.modmail == true && !options.modmailsettings) { throw new TypeError("Keine Modmailsettings angegeben") }
+        if( options.voice == true && !options.voicesettings) { throw new TypeError("Keine Voicesettings angegeben") }
 
 
         logClear()
@@ -77,7 +86,7 @@ module.exports.ticketsystem = class {
 
         manager.invitemanager(client, options.inviteable, logInfo)
 
-        manager.startengin({ ticket: options.ticket, modmail: options.modmail, voice: options.voice }, client, { log: log, Error: logError, Warning: logWarning, Operation: logOperation, Status: logStatus, Clear: logClear, Table: logTable, Info: logInfo })
+        manager.startengin({ ticket: options.ticket, modmail: options.modmail, voice: options.voice }, client, { log: log, Error: logError, Warning: logWarning, Operation: logOperation, Status: logStatus, Clear: logClear, Table: logTable, Info: logInfo }, { admin: options.adminrolename, support: options.supporterrolename }, { fs: options.ticketsettings.ticketname })
 
         client.on('ready', async () => {
 
@@ -246,19 +255,29 @@ module.exports.ticketsystem = class {
             })
 
             if (!status.activities.url) {
-                this.client.user.setActivity({
-                    name: status.name,
-                    type: status.activities.type
+                this.client.user.setPresence({
+                    status:status.type,
+                    afk:status.afk,
+                    activities:{
+                        name:status.name,
+                        type: status.activities.type
+                    }
                 })
             } else {
-                this.client.user.setActivity({
-                    name: status.name,
-                    type: status.activities.type,
-                    url: status.activities.url
+                this.client.user.setPresence({
+                    status:status.type,
+                    afk:status.afk,
+                    activities:{
+                        name:status.name,
+                        type: status.activities.type,
+                        url:status.activities.url
+                    }
                 })
             }
             this.logOperation("Bot Status", "UPDATE", "finished")
         })
+
+        setTimeout(() => {this.updatestatus(status)},60000)
 
     }
 
