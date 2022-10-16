@@ -1,0 +1,40 @@
+{
+  "name": "discord.js-ticketsystem",
+  "version": "1.0.0",
+  "description": "A easy discord.js ticket bot system",
+  "main": "test.js",
+  "scripts": {
+    "test": "node .",
+    "bot": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/LouiLetsPlayPro/discord.js-ticketsystem.git"
+  },
+  "keywords": [
+    "discord.js",
+    "ticketbot",
+    "ticket",
+    "ticketsystem",
+    "discord",
+    "discordbot"
+  ],
+  "author": "LouiLetsPlayPro",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LouiLetsPlayPro/discord.js-ticketsystem/issues"
+  },
+  "homepage": "https://github.com/LouiLetsPlayPro/discord.js-ticketsystem#readme",
+  "dependencies": {
+    "discord.js": "^14.6.0",
+    "discord.js-console": "^2.1.0-constructor",
+    "enmap": "^5.9.0"
+  },
+  "types": "./src/types.ts",
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  },
+  "engines": {
+    "node": ">=16.9.0"
+  }
+}
