@@ -7,9 +7,6 @@ const discord = require('discord.js')
  * @param {object} rname
  * @param {object} ndata
  * 
- * @param {string} ndata.uname
- * @param {string} ndata.tid
- * @param {string} ndata.tthema
  * @param {string} ndata.fs
  * 
  * @param {string} rname.support
@@ -118,7 +115,7 @@ module.exports.run = (client, consoledata, getdb, rname, ndata) => {
                             .setLabel("Ticket Öffnen")
                         const raw = new discord.ActionRowBuilder()
                             .addComponents(btn)
-                        channel.send({ embeds: [embed], components: [raw], files:[support] })
+                        channel.send({ embeds: [embed], components: [raw], files: [support] })
 
                         if (allowfeedback == 0) { allowfeedback = false }
                         if (ticketlog == 0) { ticketlog = false }
@@ -184,27 +181,85 @@ module.exports.run = (client, consoledata, getdb, rname, ndata) => {
                                 .setTitle("Error 401")
                                 .setDescription("Bitte Melde dich im [Support](https://discord.gg/vbtxpv47w7)")
                                 .addFields({
-                                    name:"Fehler",
-                                    value:db.get(`${interaction.guildId}`)?"Unknown Tickets":"Unknown Guild",
-                                    inline:true
-                                },{
-                                    name:"Daten",
-                                    value:"Open - " + opn + ", G - " + interaction.guildId,
-                                    inline:true 
+                                    name: "Fehler",
+                                    value: db.get(`${interaction.guildId}`) ? "Unknown Tickets" : "Unknown Guild",
+                                    inline: true
+                                }, {
+                                    name: "Daten",
+                                    value: "Open - " + opn + ", G - " + interaction.guildId,
+                                    inline: true
                                 })
                                 .setThumbnail("attachment://error.png")
-                                
+
                         ],
                         ephemeral: true,
-                        files:[error]
+                        files: [error]
                     })
                 }
                 var data = db.get(`${interaction.guildId}`).tickets[opn]
                 consoledata.log(JSON.stringify(data))
+                createticket(data.thema, data.category, interaction.user, rname, ndata, interaction.guild).send()
             }
         }
     })
-    function createticket(tname, tcat, tuser, rdata, ndata) {
-        if(!tname) return new TypeError("Kein Ticket Name angegeben")
+    /**
+     * 
+     * @param {*} tname Ticket Thema
+     * @param {*} tcat Ticket Categorie
+     * @param {discord.User} tuser Ticket Ersteller
+     * @param {*} rdata Ticket Rollen Daten 
+     * @param {*} ndata fs => Ticketnamestring
+     * @param {discord.Guild} g guild
+     * @returns {discord.Channel}
+     */
+    function createticket(tname, tcat, tuser, rdata, ndata, g) {
+        if (!tname) return new TypeError("Kein Ticket Name angegeben")
+        if (!tcat) return new TypeError("Kein Ticket Categorie angegeben")
+        if (!tuser) return new TypeError("Kein Ticket Ersteller angegeben")
+        if (!rdata) return new TypeError("Kein Rollen Daten angegeben")
+        if (!ndata) return new TypeError("Kein Namen Daten angegeben")
+        if (!g) return new TypeError("Keine Guild angegeben")
+
+        const id = (Math.floor(Math.random() * 9999999999) + 1000000000).toString(16);
+
+        if (ndata.fs.includes("?thema?")) {
+            ndata.fs.replace("?thema?", tname)
+        }
+        if (ndata.fs.includes("?id?")) {
+            ndata.fs.replace("?id?", id)
+        }
+        if (ndata.fs.includes("?uname?")) {
+            ndata.fs.replace("?uname?", tuser.username)
+        }
+
+        g.channels.create(`🟡-` + ndata.fs, {
+            type: discord.ChannelType.GuildText,
+            topic: "Ticket von " + tuser.username + " mit dem Thema **" + tname + "**",
+            parent: tcat,
+            _permissionOverwrites: [
+                {
+                    id: g.roles.everyone,
+                    deny: [discord.PermissionFlagsBits.ViewChannel]
+                }, {
+                    id: tuser.id,
+                    allow: [discord.PermissionFlagsBits.ViewChannel, discord.PermissionFlagsBits.SendMessages, discord.PermissionFlagsBits.EmbedLinks, discord.PermissionFlagsBits.AttachFiles, discord.PermissionFlagsBits.ReadMessageHistory, discord.PermissionFlagsBits.UseApplicationCommands]
+                },{
+                    id: g.roles.cache.get(rdata.support).id,
+                    allow:[discord.PermissionFlagsBits.ViewChannel, discord.PermissionFlagsBits.SendMessages, discord.PermissionFlagsBits.EmbedLinks, discord.PermissionFlagsBits.AttachFiles, discord.PermissionFlagsBits.ReadMessageHistory, discord.PermissionFlagsBits.UseApplicationCommands, discord.PermissionFlagsBits.ManageMessages, discord.PermissionFlagsBits.MentionEveryone]
+                },{
+                    id: g.roles.cache.get(rdata.admin).id,
+                    allow:[discord.PermissionFlagsBits.ViewChannel, discord.PermissionFlagsBits.SendMessages, discord.PermissionFlagsBits.EmbedLinks, discord.PermissionFlagsBits.AttachFiles, discord.PermissionFlagsBits.ReadMessageHistory, discord.PermissionFlagsBits.UseApplicationCommands, discord.PermissionFlagsBits.ManageMessages, discord.PermissionFlagsBits.MentionEveryone, discord.PermissionFlagsBits.ManageChannels]
+                },{
+                    id: g.roles.cache.get(rdata.support).id,
+                    allow:[discord.PermissionFlagsBits.ViewChannel, discord.PermissionFlagsBits.SendMessages, discord.PermissionFlagsBits.EmbedLinks, discord.PermissionFlagsBits.AttachFiles, discord.PermissionFlagsBits.ReadMessageHistory, discord.PermissionFlagsBits.ManageMessages, discord.PermissionFlagsBits.MentionEveryone, discord.PermissionFlagsBits.ManageChannels]
+                }
+            ],
+            get permissionOverwrites() {
+                return this._permissionOverwrites;
+            },
+            set permissionOverwrites(value) {
+                this._permissionOverwrites = value;
+            },
+        })
     }
 }
