@@ -58,6 +58,7 @@ module.exports.run = (client, consoledata) => {
                     description_Localizations:"de",
                     dmPermission:false,
                     type:discord.ApplicationCommandType.ChatInput,
+                    defaultMemberPermissions:"ManageMessages",
                     options:[{
                         name:"grund",
                         description:"Grund warum das Ticket geschlossen wurde -> Wird an den User ggf. weitergesendet",
@@ -77,6 +78,7 @@ module.exports.run = (client, consoledata) => {
                     description_Localizations:"de",
                     dmPermission:false,
                     type:discord.ApplicationCommandType.ChatInput,
+                    defaultMemberPermissions:"ManageMessages"
                 })
                 commandcreatetable.push({name:"claim",neu:true})
             }
@@ -88,6 +90,7 @@ module.exports.run = (client, consoledata) => {
                     description_Localizations:"de",
                     dmPermission:false,
                     type:discord.ApplicationCommandType.ChatInput,
+                    defaultMemberPermissions:"ManageMessages"
                 })
                 commandcreatetable.push({name:"reopen",neu:true})
             }
@@ -99,6 +102,7 @@ module.exports.run = (client, consoledata) => {
                     description_Localizations:"de",
                     dmPermission:false,
                     type:discord.ApplicationCommandType.ChatInput,
+                    defaultMemberPermissions:"ManageMessages",
                     options:[{
                         name:"name",
                         description:"Neuer Ticket name",
@@ -118,6 +122,7 @@ module.exports.run = (client, consoledata) => {
                     description_Localizations:"de",
                     dmPermission:false,
                     type:discord.ApplicationCommandType.ChatInput,
+                    defaultMemberPermissions:"ManageMessages",
                     options:[{
                         name:"thema",
                         description:"Neues Ticket Thema",
@@ -137,6 +142,7 @@ module.exports.run = (client, consoledata) => {
                     description_Localizations:"de",
                     dmPermission:false,
                     type:discord.ApplicationCommandType.ChatInput,
+                    defaultMemberPermissions:"ManageMessages",
                     options:[{
                         name:"user",
                         description:"Nutzer fürs Ticket",
@@ -163,6 +169,7 @@ module.exports.run = (client, consoledata) => {
                     description_Localizations:"de",
                     dmPermission:false,
                     type:discord.ApplicationCommandType.ChatInput,
+                    defaultMemberPermissions:"Administrator",
                     options:[{
                         name:"ticket-thema",
                         description:"Thema des Ticktes",

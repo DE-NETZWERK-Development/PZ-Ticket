@@ -88,6 +88,8 @@ module.exports.ticketsystem = class {
 
         manager.startengin({ ticket: options.ticket, modmail: options.modmail, voice: options.voice }, client, { log: log, Error: logError, Warning: logWarning, Operation: logOperation, Status: logStatus, Clear: logClear, Table: logTable, Info: logInfo }, { admin: options.adminrolename, support: options.supporterrolename }, { fs: options.ticketsettings.ticketname })
 
+        this.updatestatus(options.status)
+
         client.on('ready', async () => {
 
             const guilds = await client.guilds.cache.map(g => g)
@@ -104,8 +106,6 @@ module.exports.ticketsystem = class {
                 manager.createGuild(g)
             }
 
-
-            this.updatestatus(options.status)
             logStatus("ONLINE", "Status System")
         })
 
@@ -243,35 +243,32 @@ module.exports.ticketsystem = class {
         if (!status.activities) { throw new TypeError("Keinen Activitie Daten angegeben") }
         if (!status.activities.type && status.activities.type != 0 && status.activities.type != 1 && status.activities.type != 2 && status.activities.type != 3 && status.activities.type != 5) { throw new Error("Keinen Activity Type angegeben") }
 
-        if (status.name.includes("?botname?")) {
-            status.name.replace("?botname?", this.client.user.username)
-        }
         this.logOperation("Bot Status", "UPDATE", "start")
 
         this.client.on('ready', () => {
-            this.client.user.setPresence({
-                afk: status.afk,
-                status: status.type,
-            })
+
+            if (status.name.includes("?botname?")) {
+                status.name = status.name.replace("?botname?", this.client.user.username)
+            }
 
             if (!status.activities.url) {
                 this.client.user.setPresence({
                     status:status.type,
                     afk:status.afk,
-                    activities:{
+                    activities:[{
                         name:status.name,
                         type: status.activities.type
-                    }
+                    }]
                 })
             } else {
                 this.client.user.setPresence({
                     status:status.type,
                     afk:status.afk,
-                    activities:{
+                    activities:[{
                         name:status.name,
                         type: status.activities.type,
                         url:status.activities.url
-                    }
+                    }]
                 })
             }
             this.logOperation("Bot Status", "UPDATE", "finished")
