@@ -241,36 +241,90 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                             files: [await discordTranscripts.createTranscript(interaction.channel, { filename: `${interaction.channel.name}.html`, saveImages: true })]
                         })
                     }
-                    interaction.channel.permissionOverwrites.set([
-                        {
-                            id: interaction.guild.roles.everyone,
-                            deny: [discord.PermissionFlagsBits.ViewChannel]
-                        }, {
-                            id: tuser.id,
-                            allow: [discord.PermissionFlagsBits.ViewChannel, discord.PermissionFlagsBits.EmbedLinks, discord.PermissionFlagsBits.AttachFiles, discord.PermissionFlagsBits.ReadMessageHistory, discord.PermissionFlagsBits.UseApplicationCommands]
-                        }, {
-                            id: interaction.guild.roles.cache.find(r => r.name == rname.support).id,
-                            allow: [discord.PermissionFlagsBits.ViewChannel, discord.PermissionFlagsBits.EmbedLinks, discord.PermissionFlagsBits.AttachFiles, discord.PermissionFlagsBits.ReadMessageHistory, discord.PermissionFlagsBits.UseApplicationCommands, discord.PermissionFlagsBits.ManageMessages, discord.PermissionFlagsBits.MentionEveryone]
-                        }, {
-                            id: interaction.guild.roles.cache.find(r => r.name == rname.admin).id,
-                            allow: [discord.PermissionFlagsBits.ViewChannel, discord.PermissionFlagsBits.EmbedLinks, discord.PermissionFlagsBits.AttachFiles, discord.PermissionFlagsBits.ReadMessageHistory, discord.PermissionFlagsBits.UseApplicationCommands, discord.PermissionFlagsBits.ManageMessages, discord.PermissionFlagsBits.MentionEveryone, discord.PermissionFlagsBits.ManageChannels]
-                        }, {
-                            id: tuser.id,
-                            deny: [discord.PermissionFlagsBits.SendMessages]
-                        }, {
-                            id: interaction.guild.roles.cache.find(r => r.name == rname.support).id,
-                            deny: [discord.PermissionFlagsBits.SendMessages]
-                        }, {
-                            id: interaction.guild.roles.cache.find(r => r.name == rname.admin).id,
-                            deny: [discord.PermissionFlagsBits.SendMessages]
-                        }
-                    ])
+                    interaction.channel.permissionOverwrites.edit(tuser.id, { SendMessages: false })
+                    interaction.channel.permissionOverwrites.edit(interaction.guild.roles.cache.find(r => r.name == rname.support).id, { SendMessages: false })
+                    interaction.channel.permissionOverwrites.edit(interaction.guild.roles.cache.find(r => r.name == rname.admin).id, { SendMessages: false })
                     if (dclose == true) {
                         setTimeout(() => {
                             interaction.channel.delete({ reason: "Ticket Geschlossen" })
                         }, 10000)
                     }
                     break;
+
+                case "ticketreopen":
+                    var ts = false;
+                    var t;
+                    var tid;
+                    var tdb = getdb(`tickets`)
+                    tdb.indexes.forEach(td => {
+                        if (tdb.get(`${td}`).channelid == interaction.channelId) {
+                            t = tdb.get(`${td}`);
+                            tid = td;
+                            ts = true;
+                        }
+                    })
+                    if (ts == false) { return interaction.reply({ content: "Du befindest dich nicht in einem Ticket" }) }
+                    tdb.set(`${tid}`, false, "claimed")
+                    interaction.channel.permissionOverwrites.edit(interaction.guild.roles.cache.find(r => r.name == rname.support), { ViewChannel: true })
+                    interaction.channel.permissionOverwrites.delete(interaction.user)
+                    interaction.reply({ content: "Done :)" })
+                    break;
+
+                case "ticketadd":
+                    var user = interaction.options.getUser("user")
+                    var role = interaction.options.getRole("rolle")
+                    if (!user && !role) { return interaction.reply({ content: "Keine Angaben?" }) }
+                    const embed = new discord.EmbedBuilder()
+                        .setTitle("Ticket Add")
+                    if (user) {
+                        interaction.channel.permissionOverwrites.edit(user, { ViewChannel: true, SendMessages: true })
+                        embed.addFields({ name: "User", value: "User " + user.tag + " hinzugefügt" })
+                    }
+                    if (role) {
+                        interaction.channel.permissionOverwrites.edit(role, { ViewChannel: true, SendMessages: true })
+                        embed.addFields({ name: "Rolle", value: "Rolle " + role.name + " hinzugefügt" })
+                    }
+                    interaction.reply({ embeds: [embed] })
+                    break;
+
+                case "ticketclaim":
+                    var ts = false;
+                    var t;
+                    var tid;
+                    var tdb = getdb(`tickets`)
+                    tdb.indexes.forEach(td => {
+                        if (tdb.get(`${td}`).channelid == interaction.channelId) {
+                            t = tdb.get(`${td}`);
+                            tid = td;
+                            ts = true;
+                        }
+                    })
+                    if (ts == true) {
+                        const ticketid = tid
+                        const ticket1 = getdb(`tickets`).get(`${ticketid}`)
+
+                        if (!ticket1.claimed == false) {
+                            return interaction.reply({ content: "Das Ticket ist bereits geclaimt" })
+                        }
+                        if (!interaction.member.roles.cache.has(interaction.guild.roles.cache.find(r => r.name == rname.support).id)) {
+                            return interaction.reply({ content: "Du bist nicht dazu berechtigt" })
+                        }
+                        getdb(`tickets`).set(`${ticketid}`, interaction.user.id, "claimed")
+                        interaction.channel.permissionOverwrites.edit(interaction.guild.roles.cache.find(r => r.name == rname.support), { ViewChannel: false })
+                        interaction.channel.permissionOverwrites.edit(interaction.user, { ViewChannel: true })
+                        return interaction.reply({ content: "Done :)" })
+                    }
+                    return;
+                    break;
+
+                case "ticketname":
+                    const name = interaction.options.getString("name")
+                    interaction.channel.setName(name)
+                    interaction.reply({ content: "DONE :)" })
+                    break;
+
+                case "":
+                    break
             }
 
         }
@@ -341,12 +395,17 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                 const ticketid = interaction.customId.replace("claim-", "")
                 const ticket = getdb(`tickets`).get(`${ticketid}`)
 
-                if (ticket.claimed == false) {
-                    if (!interaction.member.roles.cache.has(interaction.guild.roles.cache.find(r => r.name == rname.support).id)) {
-                        return interaction.reply({ content: "Du bist nicht dazu berechtigt" })
-                    }
-
+                if (!ticket.claimed == false) {
+                    return interaction.reply({ content: "Das Ticket ist bereits geclaimt" })
                 }
+                if (!interaction.member.roles.cache.has(interaction.guild.roles.cache.find(r => r.name == rname.support).id)) {
+                    return interaction.reply({ content: "Du bist nicht dazu berechtigt" })
+                }
+                getdb(`tickets`).set(`${ticketid}`, interaction.user.id, "claimed")
+                interaction.channel.permissionOverwrites.edit(interaction.guild.roles.cache.find(r => r.name == rname.support), { ViewChannel: false })
+                interaction.channel.permissionOverwrites.edit(interaction.user, { ViewChannel: true })
+                return interaction.reply({ content: "Done :)" })
+
             }
             if (interaction.customId.startsWith("btn-close-feedback-")) {
                 var bearbeiter = interaction.customId.replace("btn-close-feedback-", "")
@@ -373,7 +432,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                                 new discord.TextInputBuilder()
                                     .setStyle(discord.TextInputStyle.Paragraph)
                                     .setMinLength(20)
-                                    .setMaxLength(2000)
+                                    .setMaxLength(1800)
                                     .setRequired(true)
                                     .setPlaceholder('Deine Bewertung')
                                     .setCustomId("bewertung-by-message")
@@ -409,7 +468,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                         t = td;
                     }
                 })
-                interaction.guild.channels.cache.get(`${tengin.tickets[tdb.get(`${t}`).opn].allowfeedback}`).send({embeds:[embed]})
+                interaction.guild.channels.cache.get(`${tengin.tickets[tdb.get(`${t}`).opn].allowfeedback}`).send({ embeds: [embed] })
 
                 interaction.reply({ content: 'Danke für den Feedback\nDein Ticket wird in 5 Sekunden geschlossen!' });
                 setTimeout(() => {
@@ -418,6 +477,32 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
             }
         }
     })
+
+    client.on('messageCreate', message => {
+        if (message.author.bot) return;
+        var ts = false;
+        var t;
+        var tid;
+        var tdb = getdb(`tickets`)
+        tdb.indexes.forEach(td => {
+            if (tdb.get(`${td}`).channelid == message.channelId) {
+                t = tdb.get(`${td}`);
+                tid = td;
+                ts = true;
+            }
+        })
+        if (ts == true) {
+            if (t.claimed == false) {
+                tdb.set(`${tid}`, message.member.id, "claimed")
+                message.channel.permissionOverwrites.edit(message.guild.roles.cache.find(r => r.name == rname.support), { ViewChannel: false })
+                message.channel.permissionOverwrites.edit(message.member, { ViewChannel: true })
+                return message.channel.send("Ticket bearbeiter: <@" + message.member.id + ">")
+            }
+        }
+        return;
+    })
+
+
     /**
      * 
      * @param {*} tname Ticket Thema
@@ -448,7 +533,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
         }
 
         g.channels.create({
-            name: `🟡-` + lndata.fs,
+            name: `` + lndata.fs,
             type: discord.ChannelType.GuildText,
             topic: "Ticket von " + tuser.username + " mit dem Thema **" + tname + "**",
             parent: tcat,
