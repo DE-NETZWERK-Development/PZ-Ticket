@@ -78,7 +78,7 @@ module.exports.ticketsystem = class {
 
         if (!options.status.afk) { options.status.afk = false }
 
-        client.on('error', e => { logError(e, "Fehler lässt den Bot nicht abstürzen!") })
+        client.on('error', e => { logError(e/* + "\n" + e.stack + "\n\n"*/, "Fehler lässt den Bot nicht abstürzen!") })
 
         client.on('warn', w => { logWarning(w) })
 
