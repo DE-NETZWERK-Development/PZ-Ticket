@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/LouiLetsPlayPro/discord.js-ticketsystem#readme",
   "dependencies": {
+    "discord-html-transcripts": "^3.1.0",
     "discord.js": "^14.6.0",
     "discord.js-console": "^2.1.0-constructor",
     "enmap": "^5.9.0"
