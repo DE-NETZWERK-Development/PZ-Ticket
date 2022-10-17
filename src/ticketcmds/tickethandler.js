@@ -365,37 +365,40 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                     break;
 
                 case "ticketthema":
-                    const th = interaction.options.getString("thema")
-                    var ts = false;
-                    var t;
-                    var tid;
-                    var tdb = getdb(`tickets`)
-                    tdb.indexes.forEach(td => {
-                        if (tdb.get(`${td}`).channelid == interaction.channelId) {
-                            t = tdb.get(`${td}`);
-                            tid = td;
-                            ts = true;
+                    try {
+                        const th = interaction.options.getString("thema")
+                        var ts = false;
+                        var t;
+                        var tid;
+                        var tdb = getdb(`tickets`)
+                        tdb.indexes.forEach(td => {
+                            if (tdb.get(`${td}`).channelid == interaction.channelId) {
+                                t = tdb.get(`${td}`);
+                                tid = td;
+                                ts = true;
+                            }
+                        })
+                        if (ts == false) { return interaction.reply({ content: "Du bist in keinem Ticket" }) }
+
+                        var des = interaction.channel.topic;
+                        des = des.replace(`${t.thema}`, `${th}`)
+                        interaction.channel.setTopic(des)
+
+                        tdb.set(`${tid}`, th, "thema")
+                        var lndata = { fs: nsdata.fs }
+                        if (nsdata.fs.includes("?thema?")) {
+                            lndata.fs = lndata.fs.replace("?thema?", th)
                         }
-                    })
-                    if (ts == false) { return interaction.reply({ content: "Du bist in keinem Ticket" }) }
+                        if (nsdata.fs.includes("?id?")) {
+                            lndata.fs = lndata.fs.replace("?id?", tid)
+                        }
+                        if (nsdata.fs.includes("?uname?")) {
+                            lndata.fs = lndata.fs.replace("?uname?", tuser.username)
+                        }
+                        interaction.channel.setName("" + lndata.fs)
+                        interaction.reply({ content: "DONE :)" })
+                    } catch (e) { }
 
-                    var des = interaction.channel.topic;
-                    des = des.replace(`${t.thema}`, `${th}`)
-                    interaction.channel.setTopic(des)
-
-                    tdb.set(`${tid}`, th, "thema")
-                    var lndata = { fs: nsdata.fs }
-                    if (nsdata.fs.includes("?thema?")) {
-                        lndata.fs = lndata.fs.replace("?thema?", th)
-                    }
-                    if (nsdata.fs.includes("?id?")) {
-                        lndata.fs = lndata.fs.replace("?id?", tid)
-                    }
-                    if (nsdata.fs.includes("?uname?")) {
-                        lndata.fs = lndata.fs.replace("?uname?", tuser.username)
-                    }
-                    interaction.channel.setName("" + lndata.fs)
-                    interaction.reply({ content: "DONE :)" })
                     break;
             }
         }
