@@ -65,6 +65,16 @@ module.exports.getdb = (dbname) => {
  * @param {object} options
  * @param {discord.Client} client
  * @param {object} consoledata
+ * @param {object} rname
+ * @param {object} ndata
+ * 
+ * @param {string} ndata.uname
+ * @param {string} ndata.tid
+ * @param {string} ndata.tthema
+ * @param {string} ndata.fs
+ * 
+ * @param {string} rname.support
+ * @param {string} rname.admin
  * 
  * @param {boolean} options.ticket
  * @param {boolean} options.modmail
@@ -80,10 +90,10 @@ module.exports.getdb = (dbname) => {
  * @param {function(message)} consoledata.Info
  */
 
-module.exports.startengin = (options, client, consoledata) => {
+module.exports.startengin = (options, client, consoledata, rname, ndata) => {
     if (options.ticket == true) {
         createticketcommands.run(client, consoledata)
-        tickethandler.run(client, consoledata, this.getdb, )
+        tickethandler.run(client, consoledata, this.getdb, rname, ndata)
     }
     if (options.modmail == true) {
 
