@@ -1,4 +1,5 @@
 const discord = require('discord.js');
+const discordTranscripts = require('discord-html-transcripts');
 
 /**
  * 
@@ -154,7 +155,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                                         inline: false
                                     }, {
                                         name: "Feedback",
-                                        value: allowfeedback ? "<#" + ticketlog + ">" : "Deaktiviert",
+                                        value: allowfeedback ? "<#" + allowfeedback + ">" : "Deaktiviert",
                                         inline: false
                                     }
                                     )
@@ -165,7 +166,110 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                     }
                     break;
 
-                case "":
+                case "ticketclose":
+                    var reason = interaction.options.getString("grund");
+                    if (!reason) { reason = [true, "Kein Grund Angegeben"] } else { reason = [true, reason] }
+                    interaction.reply({ content: "Ticket wird geschlossen", ephemeral: true })
+                    var t;
+                    var tdb = getdb(`tickets`)
+                    tdb.indexes.forEach(td => {
+                        if (tdb.get(`${td}`).channelid == interaction.channelId) {
+                            t = td;
+                        }
+                    })
+
+                    if (t == undefined) return interaction.editReply({ content: `Du bist nicht in einem Ticket!`, ephemeral: true })
+
+                    if (getdb(`tickets`).get(`${t}`).claimed == false) {
+                        tdb.set(`${t}`, "Support Team", "claimed")
+                    }
+                    var tuser = client.users.cache.get(tdb.get(`${t}`).owner)
+
+                    var udb = getdb(`member`)
+                    var user = udb.get(`${interaction.guildId}-${tuser.id}`)
+                    for (const key in user.ticketopn) {
+                        if (user.ticketopn[key].opn == opn) {
+                            user.ticketopn[key].o = user.ticketopn[key].o - 1;
+                            udb.set(`${interaction.guildId}-${tuser.id}`, user)
+                        }
+                    }
+
+                    tdb.set(`${t}`, reason, "closed")
+                    var dclose = true
+                    const kontembed = new discord.EmbedBuilder()
+                    const feedembed = new discord.EmbedBuilder()
+                    if (getdb(`ticketengin`).get(`${interaction.guildId}`).tickets[tdb.get(`${t}`).opn].kontakt != false) {
+                        kontembed
+                            .setTitle("🎟 Ticket Geschlossen 🎟")
+                            .setDescription("Hallo <@" + tuser.id + ">\nDein Ticket auf " + interaction.guild.name + " wurde geschlossen.")
+                            .setColor("Aqua")
+                            .setFooter({ text: "By Planet Zero" })
+
+
+                        if (reason[1] != "Kein Grund Angegeben") { kontembed.addFields({ name: "Grund", value: "" + reason[1] }) }
+                        if (getdb(`ticketengin`).get(`${interaction.guildId}`).tickets[tdb.get(`${t}`).opn].allowfeedback != 0) { kontembed.addFields({ name: "Feedback", value: "Bitte gebe dein Feedback in <#" + interaction.channelId + "> ab :)" }) }
+                        try {
+                            (await tuser.createDM(true)).send({ embeds: [kontembed] })
+                        } catch (e) { }
+                    }
+                    if (getdb(`ticketengin`).get(`${interaction.guildId}`).tickets[tdb.get(`${t}`).opn].allowfeedback != 0) {
+                        dclose = false;
+                        feedembed
+                            .setTitle('🎟 Ticket Close 🎟')
+                            .setDescription('Hiermit wurde das Ticket von unserem Support Team beendet.\nSie können ihr Ticket nun mit den Beiden Buttons unter dieser Nachricht schließen.\nButton Beschreibung\n\n``🎟 Feedback`` -> Gebe dem Teammitglied welches ihr Ticket bearbeitet hat eine Rückmeldung.\n``❌ Schließen`` -> Schließt das Ticket ohne das eine Feedback für das Team abgegeben wird.')
+                            .setFooter({ text: "GL | Tickets", iconURL: client.user.avatarURL() })
+                        if (reason[2] != "Kein Grund Angegeben") { feedembed.addFields({ name: "Grund", value: "" + reason[1] }) }
+                        interaction.channel.send({
+                            embeds: [feedembed], components: [
+                                new discord.ActionRowBuilder()
+                                    .addComponents(
+                                        new discord.ButtonBuilder()
+                                            .setCustomId("btn-close-feedback-" + getdb(`tickets`).get(`${t}`).claimed)
+                                            .setStyle(discord.ButtonStyle.Success)
+                                            .setLabel('Feedback')
+                                            .setEmoji('🎟'),
+                                        new discord.ButtonBuilder()
+                                            .setCustomId("btn-close-without-feedback")
+                                            .setStyle(discord.ButtonStyle.Danger)
+                                            .setLabel('Close')
+                                            .setEmoji('❌')
+                                    )]
+                        })
+                    }
+                    if (getdb(`ticketengin`).get(`${interaction.guildId}`).tickets[tdb.get(`${t}`).opn].ticketlog != 0) {
+                        client.channels.cache.get(getdb(`ticketengin`).get(`${interaction.guildId}`).tickets[tdb.get(`${t}`).opn].ticketlog).send({
+                            files: [await discordTranscripts.createTranscript(interaction.channel, { filename: `${interaction.channel.name}.html`, saveImages: true })]
+                        })
+                    }
+                    interaction.channel.permissionOverwrites.set([
+                        {
+                            id: interaction.guild.roles.everyone,
+                            deny: [discord.PermissionFlagsBits.ViewChannel]
+                        }, {
+                            id: tuser.id,
+                            allow: [discord.PermissionFlagsBits.ViewChannel, discord.PermissionFlagsBits.EmbedLinks, discord.PermissionFlagsBits.AttachFiles, discord.PermissionFlagsBits.ReadMessageHistory, discord.PermissionFlagsBits.UseApplicationCommands]
+                        }, {
+                            id: interaction.guild.roles.cache.find(r => r.name == rname.support).id,
+                            allow: [discord.PermissionFlagsBits.ViewChannel, discord.PermissionFlagsBits.EmbedLinks, discord.PermissionFlagsBits.AttachFiles, discord.PermissionFlagsBits.ReadMessageHistory, discord.PermissionFlagsBits.UseApplicationCommands, discord.PermissionFlagsBits.ManageMessages, discord.PermissionFlagsBits.MentionEveryone]
+                        }, {
+                            id: interaction.guild.roles.cache.find(r => r.name == rname.admin).id,
+                            allow: [discord.PermissionFlagsBits.ViewChannel, discord.PermissionFlagsBits.EmbedLinks, discord.PermissionFlagsBits.AttachFiles, discord.PermissionFlagsBits.ReadMessageHistory, discord.PermissionFlagsBits.UseApplicationCommands, discord.PermissionFlagsBits.ManageMessages, discord.PermissionFlagsBits.MentionEveryone, discord.PermissionFlagsBits.ManageChannels]
+                        }, {
+                            id: tuser.id,
+                            deny: [discord.PermissionFlagsBits.SendMessages]
+                        }, {
+                            id: interaction.guild.roles.cache.find(r => r.name == rname.support).id,
+                            deny: [discord.PermissionFlagsBits.SendMessages]
+                        }, {
+                            id: interaction.guild.roles.cache.find(r => r.name == rname.admin).id,
+                            deny: [discord.PermissionFlagsBits.SendMessages]
+                        }
+                    ])
+                    if (dclose == true) {
+                        setTimeout(() => {
+                            interaction.channel.delete({ reason: "Ticket Geschlossen" })
+                        }, 10000)
+                    }
                     break;
             }
 
@@ -233,16 +337,84 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                     return createticket(data.thema, data.category, interaction.user, rname, nsdata, interaction.guild, interaction, opn)
                 }
             }
-        }
-        if (interaction.customId.startsWith("claim-")) {
-            const ticketid = interaction.customId.replace("claim-", "")
-            const ticket = getdb(`tickets`).get(`${ticketid}`)
+            if (interaction.customId.startsWith("claim-")) {
+                const ticketid = interaction.customId.replace("claim-", "")
+                const ticket = getdb(`tickets`).get(`${ticketid}`)
 
-            if (ticket.claimed == false) {
-                if (!interaction.member.roles.cache.has(interaction.guild.roles.cache.find(r => r.name == rname.support).id)) {
-                    return interaction.reply({ content: "Du bist nicht dazu berechtigt" })
+                if (ticket.claimed == false) {
+                    if (!interaction.member.roles.cache.has(interaction.guild.roles.cache.find(r => r.name == rname.support).id)) {
+                        return interaction.reply({ content: "Du bist nicht dazu berechtigt" })
+                    }
+
                 }
+            }
+            if (interaction.customId.startsWith("btn-close-feedback-")) {
+                var bearbeiter = interaction.customId.replace("btn-close-feedback-", "")
+                if (bearbeiter != "Support Team") {
+                    bearbeiter = client.users.cache.get(bearbeiter).tag
+                }
+                const modal = new discord.ModalBuilder()
+                    .setCustomId("feedback-" + bearbeiter)
+                    .setTitle(bearbeiter + ' | Feedback')
+                    .addComponents(
+                        new discord.ActionRowBuilder()
+                            .addComponents(
+                                new discord.TextInputBuilder()
+                                    .setStyle(discord.TextInputStyle.Short)
+                                    .setMinLength(1)
+                                    .setMaxLength(2)
+                                    .setRequired(true)
+                                    .setPlaceholder('1')
+                                    .setCustomId("bewertung-by-number")
+                                    .setLabel("Skala von 1-10 (10 = Beste)")
+                            ),
+                        new discord.ActionRowBuilder()
+                            .addComponents(
+                                new discord.TextInputBuilder()
+                                    .setStyle(discord.TextInputStyle.Paragraph)
+                                    .setMinLength(20)
+                                    .setMaxLength(2000)
+                                    .setRequired(true)
+                                    .setPlaceholder('Deine Bewertung')
+                                    .setCustomId("bewertung-by-message")
+                                    .setLabel("Bewertung (gut? schlecht? warum?)")
+                            )
+                    )
 
+                interaction.showModal(modal)
+            }
+            if (interaction.customId.startsWith("btn-close-without-feedback")) {
+                interaction.reply({ content: "Dein Ticket wird in 5 Sekunden geschlossen!" })
+                setTimeout(() => {
+                    interaction.channel.delete()
+                }, 5000)
+            }
+        }
+        if (interaction.isModalSubmit()) {
+            if (interaction.customId.startsWith("feedback-")) {
+                const nb = interaction.components[0].components[0].value;
+                const ms = interaction.components[1].components[0].value;
+                const bb = interaction.customId.replace("feedback-", "")
+
+                const embed = new discord.EmbedBuilder()
+                    .setTitle(bb + ' | Feedback')
+                    .addFields({ name: 'Bewertung auf einer Skala von 1 bis 10', value: nb + "" }, { name: 'Bewertung Message', value: ms + "" })
+                    .setFooter({ text: "By Planet Zero" })
+
+                const tengin = getdb(`ticketengin`).get(`${interaction.guildId}`)
+                var t;
+                var tdb = getdb(`tickets`)
+                tdb.indexes.forEach(td => {
+                    if (tdb.get(`${td}`).channelid = interaction.channelId) {
+                        t = td;
+                    }
+                })
+                interaction.guild.channels.cache.get(`${tengin.tickets[tdb.get(`${t}`).opn].allowfeedback}`).send({embeds:[embed]})
+
+                interaction.reply({ content: 'Danke für den Feedback\nDein Ticket wird in 5 Sekunden geschlossen!' });
+                setTimeout(() => {
+                    interaction.channel.delete()
+                }, 5000)
             }
         }
     })
