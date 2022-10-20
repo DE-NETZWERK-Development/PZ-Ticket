@@ -55,36 +55,74 @@ module.exports.run = (client, consoledata) => {
                     description_Localizations: "de",
                     dmPermission: false,
                     type: discord.ApplicationCommandType.ChatInput,
-                    options: [{
-                        name: "reportmessage",
-                        description: "Aktiviere / Deaktiviere das Reporten von Nachrichten",
-                        description_Localizations: "de",
-                        name_Localizations: "de",
-                        required: true,
-                        type: discord.ApplicationCommandOptionType.String,
-                        choices: [{
-                            name: "Aktivieren",
-                            value: "aktiv"
+                    options: [
+                        {
+                            name: "message",
+                            description: "Nachtichten Reporten",
+                            type: discord.ApplicationCommandOptionType.Subcommand,
+                            description_Localizations: "de",
+                            name_Localizations: "de",
+                            options: [
+                                {
+                                    name: "report",
+                                    description: "Aktivieren / Deaktivieren vom Reporten von Nachrichten",
+                                    description_Localizations: "de",
+                                    name_Localizations: "de",
+                                    required: true,
+                                    type: discord.ApplicationCommandOptionType.String,
+                                    choices: [
+                                        {
+                                            name: "Aktivieren",
+                                            value: "aktiv"
+                                        }, {
+                                            name: "Deaktivieren",
+                                            value: "deaktiv"
+                                        }
+                                    ]
+                                }, {
+                                    name: "channel",
+                                    description: "Channel wo die Reports rein gesendet werden",
+                                    description_Localizations: "de",
+                                    name_Localizations: "de",
+                                    required: true,
+                                    type: discord.ApplicationCommandOptionType.Channel,
+                                }
+                            ]
                         }, {
-                            name: "Deaktivieren",
-                            value: "deaktiv"
-                        }]
-                    }, {
-                        name: "reportuser",
-                        description: "Aktiviere / Deaktiviere das Reporten von Nutzern",
-                        description_Localizations: "de",
-                        name_Localizations: "de",
-                        required: true,
-                        type: discord.ApplicationCommandOptionType.String,
-                        choices: [{
-                            name: "Aktivieren",
-                            value: "aktiv"
-                        }, {
-                            name: "Deaktivieren",
-                            value: "deaktiv"
-                        }]
-                    }],
-                    autocomplete:true
+                            name: "user",
+                            description: "Nutzer Reporten",
+                            type: discord.ApplicationCommandOptionType.Subcommand,
+                            description_Localizations: "de",
+                            name_Localizations: "de",
+                            options: [
+                                {
+                                    name: "report",
+                                    description: "Aktivieren / Deaktivieren vom Reporten von Nutzern",
+                                    description_Localizations: "de",
+                                    name_Localizations: "de",
+                                    required: true,
+                                    type: discord.ApplicationCommandOptionType.String,
+                                    choices: [
+                                        {
+                                            name: "Aktivieren",
+                                            value: "aktiv"
+                                        }, {
+                                            name: "Deaktivieren",
+                                            value: "deaktiv"
+                                        }
+                                    ]
+                                }, {
+                                    name: "channel",
+                                    description: "Channel wo die Reports rein gesendet werden",
+                                    description_Localizations: "de",
+                                    name_Localizations: "de",
+                                    required: true,
+                                    type: discord.ApplicationCommandOptionType.Channel,
+                                }
+                            ]
+                        }
+                    ],
+                    autocomplete: true
                 })
             }
 
