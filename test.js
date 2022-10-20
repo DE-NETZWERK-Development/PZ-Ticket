@@ -41,11 +41,12 @@ const ticket = new ticketsystem(client,
         },
         ticket: true,     
         inviteable: true,
-        discord_logging_channel: "1030166299688583258"  ,
+        discord_logging_channel: "1030166299688583258",
         logging_in_discord: true,
         ticketsettings:{
             ticketname:"?thema?-?id?"
-        } 
+        },
+        report: true
     }
 )
 /*
