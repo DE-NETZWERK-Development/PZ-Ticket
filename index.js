@@ -23,6 +23,7 @@ module.exports.ticketsystem = class {
      * @param {boolean} options.ticket
      * @param {boolean} options.modmail
      * @param {boolean} options.voice
+     * @param {boolean} options.report Report User oder Message
      * 
      * @param {object} options.ticketsettings
      * @param {object} options.modmailsettings
@@ -58,7 +59,7 @@ module.exports.ticketsystem = class {
         if (!options.supporterrolename) { throw new TypeError("Keinen supporterrolename angegeben") }
         if (!options.credits) { throw new TypeError("keine credits optionen angegeben") }
         if (!options.ticket && !options.modmail && !options.voice) { throw new TypeError("Es muss mind. ein Argument (ticket, modmail, voice) definiert werden in den Optionen") }
-        if (options.ticket == false && options.modmail == false && options.voice == false) { throw new TypeError("Es muss mind. ein Argument (ticket, modmail, voice) aktiviert werden") }
+        if (options.ticket == false && options.modmail == false && options.voice == false && options.report == false) { throw new TypeError("Es muss mind. ein Argument (ticket, modmail, voice) aktiviert werden") }
         if (!options.status.activities.type && options.status.activities.type != 0 && options.status.activities.type != 1 && options.status.activities.type != 2 && options.status.activities.type != 3 && options.status.activities.type != 5) { throw new Error("Keinen Activity Type angegeben") }
         if (!options.inviteable) { options.inviteable = true }
         if (!options.credits.custom) { options.credits.custom = manager.credits }
@@ -68,6 +69,7 @@ module.exports.ticketsystem = class {
         if (!options.ticket) { options.ticket = false }
         if (!options.modmail) { options.modmail = false }
         if (!options.voice) { options.voice = false }
+        if (!options.report) { options.report = false }
         if( options.ticket == true && (!options.ticketsettings || !options.ticketsettings.ticketname)) { throw new TypeError("Keine Ticketsettings angegeben") }
         if( options.modmail == true && !options.modmailsettings) { throw new TypeError("Keine Modmailsettings angegeben") }
         if( options.voice == true && !options.voicesettings) { throw new TypeError("Keine Voicesettings angegeben") }
@@ -78,7 +80,7 @@ module.exports.ticketsystem = class {
 
         if (!options.status.afk) { options.status.afk = false }
 
-        client.on('error', e => { logError(e/* + "\n" + e.stack + "\n\n"*/, "Fehler lässt den Bot nicht abstürzen!") })
+        client.on('error', e => { logError(e + "\n" + e.stack + "\n\n", "Fehler lässt den Bot nicht abstürzen!") })
 
         client.on('warn', w => { logWarning(w) })
 
@@ -86,7 +88,7 @@ module.exports.ticketsystem = class {
 
         manager.invitemanager(client, options.inviteable, logInfo)
 
-        manager.startengin({ ticket: options.ticket, modmail: options.modmail, voice: options.voice }, client, { log: log, Error: logError, Warning: logWarning, Operation: logOperation, Status: logStatus, Clear: logClear, Table: logTable, Info: logInfo }, { admin: options.adminrolename, support: options.supporterrolename }, { fs: options.ticketsettings.ticketname })
+        manager.startengin({ ticket: options.ticket, modmail: options.modmail, voice: options.voice, report: options.report }, client, { log: log, Error: logError, Warning: logWarning, Operation: logOperation, Status: logStatus, Clear: logClear, Table: logTable, Info: logInfo }, { admin: options.adminrolename, support: options.supporterrolename }, { fs: options.ticketsettings.ticketname })
 
         this.updatestatus(options.status)
 
