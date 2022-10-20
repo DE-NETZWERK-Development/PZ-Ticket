@@ -1,7 +1,12 @@
 const discord = require('discord.js')
 const enmap = require('enmap')
+
 const createticketcommands = require('./ticketcmds/createticketcommands')
+const createreportcommands = require('./reportcmds/createreportcommands')
+
 const tickethandler = require('./ticketcmds/tickethandler')
+const reporthandler = require('./reportcmds/reporthandler')
+
 
 /**
  * 
@@ -55,6 +60,7 @@ module.exports.createGuild = (g) => {
  * @param {String} dbname Datenbankname
  * 
  * @return {enmap.default}
+ * 
  */
 
 module.exports.getdb = (dbname) => {
@@ -79,6 +85,7 @@ module.exports.getdb = (dbname) => {
  * @param {boolean} options.ticket
  * @param {boolean} options.modmail
  * @param {boolean} options.voice
+ * @param {boolean} options.report
  * 
  * @param {function(message)} consoledata.log
  * @param {function(code, message)} consoledata.Error
@@ -100,6 +107,10 @@ module.exports.startengin = (options, client, consoledata, rname, ndata) => {
     }
     if (options.voice == true) {
 
+    }
+    if (options.report == true) {
+        createreportcommands.run(client, consoledata)
+        reporthandler.run(client, consoledata, this.getdb)
     }
 }
 
