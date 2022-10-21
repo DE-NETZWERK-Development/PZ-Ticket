@@ -1,4 +1,3 @@
-const { DiscordAPIError } = require('discord.js');
 const discord = require('discord.js');
 
 /**
@@ -123,29 +122,85 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                 }
             }
         }
+        var reports = getdb(`reports`)
         if (interaction.commandType == discord.ApplicationCommandType.Message) {
             if (interaction.commandName == "report") {
                 if (!db.get(`${interaction.guildId}`) || !db.get(`${interaction.guildId}`).user || !db.get(`${interaction.guildId}`).user.aktiv || db.get(`${interaction.guildId}`).user.aktiv != true) { return interaction.reply({ content: "Deaktiviert!", ephemeral: true }) }
 
+                var rid = (Math.floor(Math.random() * 9999999999) + 1000000000).toString(16);
+                if (reports.get(`${rid}`)) {
+                    rid = "" + rid + "_" + rid
+                }
+                var rt = interaction.targetMessage.content;
+                var ty = true;
+                if (rt == "") {
+                    rt = JSON.stringify(interaction.targetMessage.embeds)
+                    ty = false;
+                }
                 const embed = new discord.EmbedBuilder()
-                    .setTitle("Report Message")
+                    .setTitle("Report Message | " + rid)
                     .addFields(
                         {
-                            name: "Reported Message",
-                            value: "" + interaction.targetMessage.content + "\n||[Nachricht](" + interaction.targetMessage.url + ")||",
+                            name: ty ? "Reported Message" : "Reported Embed (data)",
+                            value: "" + rt + "\n||[Nachricht](" + interaction.targetMessage.url + ")||",
                             inline: false
                         },
                         {
                             name: "Nachricht von",
-                            value: "" + interaction.user.tag + "\n||<@" + interaction.targetMessage.author.id + ">||",  
+                            value: "" + interaction.targetMessage.author.tag + "\n||<@" + interaction.targetMessage.author.id + ">||",
                             inline: false
                         },
                         {
                             name: "Reporter",
                             value: "" + interaction.user.tag + "\n||<@" + interaction.user.id + ">||",
                             inline: false
+                        },{
+                            name:"Zeit",
+                            value:"Seit <t:" + require('unix-timestamp').now() + ":R>"
                         }
                     )
+
+                consoledata.log(JSON.stringify(interaction.targetMessage))
+                reports.set(`${rid}`, {
+                    reporteduser: "" + interaction.targetMessage.author.id,
+                    reportedmessage: {
+                        content: "" + rt,
+                        link: "" + interaction.targetMessage.url
+                    },
+                    reporter: "" + interaction.user.id,
+                    reporttype: "message"
+                })
+
+                var udb = getdb(`reportuser`)
+                if (!udb.get(`${interaction.guildId}-all`)) {
+                    udb.set(`${interaction.guildId}-all`, {
+                        reports: [rid]
+                    })
+                } else {
+                    var table = [rid];
+                    var data = udb.get(`${interaction.guildId}-all`).reports
+                    for (let i = 0; i < data.length; i++) {
+                        table.push(data[i])
+                    }
+                    udb.set(`${interaction.guildId}-all`, {
+                        reports: table
+                    })
+                }
+                if (!udb.get(`${interaction.guildId}-${interaction.targetMessage.author.id}`)) {
+                    udb.set(`${interaction.guildId}-${interaction.targetMessage.author.id}`, {
+                        reports: [rid]
+                    })
+                } else {
+                    var table = [rid];
+                    var data = udb.get(`${interaction.guildId}-${interaction.targetMessage.author.id}`).reports
+                    for (let i = 0; i < data.length; i++) {
+                        table.push(data[i])
+                    }
+                    udb.set(`${interaction.guildId}-${interaction.targetMessage.author.id}`, {
+                        reports: table
+                    })
+                }
+
                 interaction.reply({ content: "Done :)", ephemeral: true })
                 client.channels.cache.get(db.get(`${interaction.guildId}`).user.channel).send({ embeds: [embed] })
             }
@@ -154,6 +209,10 @@ module.exports.run = (client, consoledata, getdb, channel) => {
             if (interaction.commandName == "report") {
                 if (!db.get(`${interaction.guildId}`) || !db.get(`${interaction.guildId}`).user || !db.get(`${interaction.guildId}`).user.aktiv || db.get(`${interaction.guildId}`).user.aktiv != true) { return interaction.reply({ content: "Deaktiviert!", ephemeral: true }) }
 
+                var rid = (Math.floor(Math.random() * 9999999999) + 1000000000).toString(16);
+                if (reports.get(`${rid}`)) {
+                    rid = "" + rid + "_" + rid
+                }
                 const modal = new discord.ModalBuilder()
                     .setCustomId('reportUserModal')
                     .setTitle(`Report User: ${interaction.targetUser.tag}`)
@@ -173,10 +232,8 @@ module.exports.run = (client, consoledata, getdb, channel) => {
 
                 var modalsubmit = await interaction.awaitModalSubmit({ time: 0 })
 
-
-
                 const embed = new discord.EmbedBuilder()
-                    .setTitle("Report User")
+                    .setTitle("Report User | " + rid)
                     .addFields(
                         {
                             name: "Reported Nutzer",
@@ -192,8 +249,48 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                             name: "Grund",
                             value: "" + modalsubmit.fields.getTextInputValue('reason'),
                             inline: false
+                        },{
+                            name:"Zeit",
+                            value:"Seit <t:" + require('unix-timestamp').now() + ":R>"
                         }
                     )
+
+                reports.set(`${rid}`, {
+                    reporteduser: "" + interaction.targetUser.id,
+                    reporter: "" + interaction.user.id,
+                    reason: "" + modalsubmit.fields.getTextInputValue('reason'),
+                    reporttype: "user"
+                })
+
+                var udb = getdb(`reportuser`)
+                if (!udb.get(`${interaction.guildId}-all`)) {
+                    udb.set(`${interaction.guildId}-all`, {
+                        reports: [rid]
+                    })
+                } else {
+                    var table = [rid];
+                    var data = udb.get(`${interaction.guildId}-all`).reports
+                    for (let i = 0; i < data.length; i++) {
+                        table.push(data[i])
+                    }
+                    udb.set(`${interaction.guildId}-all`, {
+                        reports: table
+                    })
+                }
+                if (!udb.get(`${interaction.guildId}-${interaction.targetUser.id}`)) {
+                    udb.set(`${interaction.guildId}-${interaction.targetUser.id}`, {
+                        reports: [rid]
+                    })
+                } else {
+                    var table = [rid];
+                    var data = udb.get(`${interaction.guildId}-${interaction.targetUser.id}`).reports
+                    for (let i = 0; i < data.length; i++) {
+                        table.push(data[i])
+                    }
+                    udb.set(`${interaction.guildId}-${interaction.targetUser.id}`, {
+                        reports: table
+                    })
+                }
                 modalsubmit.reply({ content: "Done :)", ephemeral: true })
                 client.channels.cache.get(db.get(`${interaction.guildId}`).user.channel).send({ embeds: [embed] })
             }
