@@ -1,5 +1,6 @@
 const discord = require('discord.js');
 const discordTranscripts = require('discord-html-transcripts');
+const d = require('../icons/data.json')
 
 /**
  * 
@@ -37,7 +38,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                             embeds: [
                                 new discord.EmbedBuilder()
                                     .setTitle("🎟 Ticket - Setup ⚙")
-                                    .setFooter({ text: "By Planet Zero", iconURL: client.user.avatarURL({}) })
+                                    .setFooter({ text: "By " + d.byt, iconURL: client.user.avatarURL({}) })
                                     .setDescription("Ticketsystem wird eingerichtet, dies kann einige Minuten dauern, bitte haben sie etwsa gedult!")
                             ], ephemeral: true
                         });
@@ -126,7 +127,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                             embeds: [
                                 new discord.EmbedBuilder()
                                     .setTitle("🎟 Ticket - Setup ⚙")
-                                    .setFooter({ text: "By Planet Zero", iconURL: client.user.avatarURL({}) })
+                                    .setFooter({ text: "By " + d.byt, iconURL: client.user.avatarURL({}) })
                                     .setDescription("Das Ticketsystem wurde erfolgreich eingerichtet!\n❗ Wichtige Daten ❗:")
                                     .addFields(
                                         {
@@ -206,7 +207,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                                 .setTitle("🎟 Ticket Geschlossen 🎟")
                                 .setDescription("Hallo <@" + tuser.id + ">\nDein Ticket auf " + interaction.guild.name + " wurde geschlossen.")
                                 .setColor("Aqua")
-                                .setFooter({ text: "By Planet Zero" })
+                                .setFooter({ text: "By " + d.byt })
 
 
                             if (reason[1] != "Kein Grund Angegeben") { kontembed.addFields({ name: "Grund", value: "" + reason[1] }) }
@@ -220,7 +221,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                             feedembed
                                 .setTitle('🎟 Ticket Close 🎟')
                                 .setDescription('Hiermit wurde das Ticket von unserem Support Team beendet.\nSie können ihr Ticket nun mit den Beiden Buttons unter dieser Nachricht schließen.\nButton Beschreibung\n\n``🎟 Feedback`` -> Gebe dem Teammitglied welches ihr Ticket bearbeitet hat eine Rückmeldung.\n``❌ Schließen`` -> Schließt das Ticket ohne das eine Feedback für das Team abgegeben wird.')
-                                .setFooter({ text: "GL | Tickets", iconURL: client.user.avatarURL() })
+                                .setFooter({ text: "By " + d.byt, iconURL: client.user.avatarURL() })
                             if (reason[2] != "Kein Grund Angegeben") { feedembed.addFields({ name: "Grund", value: "" + reason[1] }) }
                             interaction.channel.send({
                                 embeds: [feedembed], components: [
@@ -250,9 +251,11 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                     interaction.channel.permissionOverwrites.edit(interaction.guild.roles.cache.find(r => r.name == rname.support).id, { SendMessages: false })
                     interaction.channel.permissionOverwrites.edit(interaction.guild.roles.cache.find(r => r.name == rname.admin).id, { SendMessages: false })
                     if (dclose == true) {
-                        setTimeout(() => {
-                            interaction.channel.delete({ reason: "Ticket Geschlossen" })
-                        }, 10000)
+                        try {
+                            setTimeout(() => {
+                                interaction.channel.delete({ reason: "Ticket Geschlossen" })
+                            }, 10000)
+                        } catch (e) { }
                     }
                     break;
 
@@ -268,11 +271,11 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                             ts = true;
                         }
                     })
-                    if (ts == false) { return interaction.reply({ content: "Du befindest dich nicht in einem Ticket" }) }
+                    if (ts == false) { return interaction.reply({ embeds: [embedbuilder("noticket", "ticketreopen")] }) }
                     tdb.set(`${tid}`, false, "claimed")
                     interaction.channel.permissionOverwrites.edit(interaction.guild.roles.cache.find(r => r.name == rname.support), { ViewChannel: true })
                     interaction.channel.permissionOverwrites.delete(interaction.user)
-                    interaction.reply({ content: "Done :)" })
+                    interaction.reply({ embeds: [embedbuilder("done", "ticketreopen")], ephemeral: true })
                     break;
 
                 case "ticketadd":
@@ -312,12 +315,12 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                             return interaction.reply({ content: "Das Ticket ist bereits geclaimt" })
                         }
                         if (!interaction.member.roles.cache.has(interaction.guild.roles.cache.find(r => r.name == rname.support).id) && !interaction.member.roles.cache.has(interaction.guild.roles.cache.find(r => r.name == rname.admin).id)) {
-                            return interaction.reply({ content: "Du bist nicht dazu berechtigt" })
+                            return interaction.reply({ embeds: [embedbuilder("noperms", "ticketclaim")] })
                         }
                         getdb(`tickets`).set(`${ticketid}`, interaction.user.id, "claimed")
                         interaction.channel.permissionOverwrites.edit(interaction.guild.roles.cache.find(r => r.name == rname.support), { ViewChannel: false })
                         interaction.channel.permissionOverwrites.edit(interaction.user, { ViewChannel: true })
-                        return interaction.reply({ content: "Done :)" })
+                        return interaction.reply({ embeds: [embedbuilder("done", "ticketclaim")] })
                     }
                     return;
                     break;
@@ -325,7 +328,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                 case "ticketname":
                     const name = interaction.options.getString("name")
                     interaction.channel.setName(name)
-                    interaction.reply({ content: "DONE :)" })
+                    interaction.reply({ embeds: [embedbuilder("done", "ticketname")] })
                     break;
 
                 case "ticketopen":
@@ -378,7 +381,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                                 ts = true;
                             }
                         })
-                        if (ts == false) { return interaction.reply({ content: "Du bist in keinem Ticket" }) }
+                        if (ts == false) { return interaction.reply({ embeds: [embedbuilder("noticket", "ticketthema")] }) }
 
                         var des = interaction.channel.topic;
                         des = des.replace(`${t.thema}`, `${th}`)
@@ -396,7 +399,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                             lndata.fs = lndata.fs.replace("?uname?", tuser.username)
                         }
                         interaction.channel.setName("" + lndata.fs)
-                        interaction.reply({ content: "DONE :)" })
+                        interaction.reply({ embeds: [embedbuilder("done", "ticketthema")] })
                     } catch (e) { }
 
                     break;
@@ -473,12 +476,12 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                     return interaction.reply({ content: "Das Ticket ist bereits geclaimt" })
                 }
                 if (!interaction.member.roles.cache.has(interaction.guild.roles.cache.find(r => r.name == rname.support).id)) {
-                    return interaction.reply({ content: "Du bist nicht dazu berechtigt" })
+                    return interaction.reply({ embeds: [embedbuilder("noperms", "claim")] })
                 }
                 getdb(`tickets`).set(`${ticketid}`, interaction.user.id, "claimed")
                 interaction.channel.permissionOverwrites.edit(interaction.guild.roles.cache.find(r => r.name == rname.support), { ViewChannel: false })
                 interaction.channel.permissionOverwrites.edit(interaction.user, { ViewChannel: true })
-                return interaction.reply({ content: "Done :)" })
+                return interaction.reply({ embeds: [embedbuilder("done", "claim")] })
 
             }
             if (interaction.customId.startsWith("btn-close-feedback-")) {
@@ -518,9 +521,11 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
             }
             if (interaction.customId.startsWith("btn-close-without-feedback")) {
                 interaction.reply({ content: "Dein Ticket wird in 5 Sekunden geschlossen!" })
-                setTimeout(() => {
-                    interaction.channel.delete()
-                }, 5000)
+                try {
+                    setTimeout(() => {
+                        interaction.channel.delete()
+                    }, 5000)
+                } catch (e) { }
             }
         }
         if (interaction.isModalSubmit()) {
@@ -532,7 +537,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                 const embed = new discord.EmbedBuilder()
                     .setTitle(bb + ' | Feedback')
                     .addFields({ name: 'Bewertung auf einer Skala von 1 bis 10', value: nb + "" }, { name: 'Bewertung Message', value: ms + "" })
-                    .setFooter({ text: "By Planet Zero" })
+                    .setFooter({ text: "By " + d.byt })
 
                 const tengin = getdb(`ticketengin`).get(`${interaction.guildId}`)
                 var t;
@@ -545,9 +550,11 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                 interaction.guild.channels.cache.get(`${tengin.tickets[tdb.get(`${t}`).opn].allowfeedback}`).send({ embeds: [embed] })
 
                 interaction.reply({ content: 'Danke für den Feedback\nDein Ticket wird in 5 Sekunden geschlossen!' });
-                setTimeout(() => {
-                    interaction.channel.delete()
-                }, 5000)
+                try {
+                    setTimeout(() => {
+                        interaction.channel.delete()
+                    }, 5000)
+                } catch (e) { }
             }
         }
     })
@@ -572,7 +579,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
                 tdb.set(`${tid}`, message.member.id, "claimed")
                 message.channel.permissionOverwrites.edit(message.guild.roles.cache.find(r => r.name == rname.support), { ViewChannel: false })
                 message.channel.permissionOverwrites.edit(message.member, { ViewChannel: true })
-                return message.channel.send("Ticket bearbeiter: <@" + message.member.id + ">")
+                return message.channel.send({ embeds: [new discord.EmbedBuilder().setTitle("Ticket Bearbeiter").setDescription("Das Ticket wird nun von <@" + message.member.id + "> bearbeitet.").setColor("Blue").setFooter({ text: "By " + d.byt })] })
             }
         }
         return;
@@ -608,7 +615,7 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
         if (ndata.fs.includes("?uname?")) {
             lndata.fs = lndata.fs.replace("?uname?", tuser.username)
         }
-
+        if (g.channels.cache.filter(n => n.name).length < 499) return i.reply({ content: "Max Channels des Servers erreicht", ephemeral: true })
         g.channels.create({
             name: `` + lndata.fs,
             type: discord.ChannelType.GuildText,
@@ -639,7 +646,9 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
             },
         }).then(async c => {
             if (tcat != 0) {
-                c.setParent(tcat)
+                try {
+                    c.setParent(tcat)
+                } catch (e) { }
             }
             getdb(`tickets`).set(`${id}`, {
                 owner: tuser.id,
@@ -668,5 +677,28 @@ module.exports.run = (client, consoledata, getdb, rname, nsdata) => {
             i.reply({ content: "Dein Ticket wurde erstellt, schau mal in <#" + c.id + "> vorbei um deine Anliegen geklärt zu bekommen", ephemeral: true })
             return;
         })
+    }
+}
+
+/**
+ * @param {String "noperms","noticket","done")} type
+ * @param {String} cmd
+ * @param {String} options
+ * 
+ * @return {discord.EmbedBuilder()}
+ */
+
+function embedbuilder(type, cmd, options) {
+    if (!type) throw new Error("Invalid Type");
+    if (!cmd) throw new Error("Invalid CMD");
+    switch (type) {
+        case "noperms":
+            return new discord.EmbedBuilder().setTitle("❌ Keine Berechtigung ❌").setDescription("Du hast für den Befehl ``" + cmd + "`` keine Berechtigung!").addFields({ name: "Dies ist ein Fehler", value: "Sollte dies ein Fehler sein überprüfe bitte ob du die Ticket Roll /-en hast. Sollte danach immernoch das Problem Existieren melde dich bitte im [Support](https://discord.gg/vbtxpv47w7)" }).setColor("Red").setFooter({ text: "By " + + d.byt })
+
+        case "noticket":
+            return new discord.EmbedBuilder().setTitle("❌ Kein Ticket ❌").setDescription("Du bist für den hast für den Befehl ``" + cmd + "`` in keine Ticket!").addFields({ name: "Dies ist ein Fehler", value: "Sollte dies ein Fehler sein überprüfe bitte, ob du dich in einemTicket befindest. Sollte danach immernoch das Problem Existieren melde dich bitte im [Support](https://discord.gg/vbtxpv47w7)" }).setColor("Red").setFooter({ text: "By " + d.byt })
+
+        case "done":
+            return new discord.EmbedBuilder().setTitle("✅ Done ✅").setDescription("Du hast den Befehl ``" + cmd + "`` erfolgreich Ausgeführt!").setColor("Green").setFooter({ text: "By " + d.byt })
     }
 }
