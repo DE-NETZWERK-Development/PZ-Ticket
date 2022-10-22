@@ -156,7 +156,7 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                             inline: false
                         },{
                             name:"Zeit",
-                            value:"Seit <t:" + require('unix-timestamp').now() + ":R>"
+                            value:"" + discord.time(new Date(), discord.TimestampStyles.RelativeTime)
                         }
                     )
 
@@ -168,7 +168,8 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                         link: "" + interaction.targetMessage.url
                     },
                     reporter: "" + interaction.user.id,
-                    reporttype: "message"
+                    reporttype: "message",
+                    time:discord.time(new Date(), discord.TimestampStyles.RelativeTime)
                 })
 
                 var udb = getdb(`reportuser`)
@@ -251,7 +252,7 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                             inline: false
                         },{
                             name:"Zeit",
-                            value:"Seit <t:" + require('unix-timestamp').now() + ":R>"
+                            value:"" + discord.time(new Date(), discord.TimestampStyles.RelativeTime)
                         }
                     )
 
@@ -259,7 +260,8 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                     reporteduser: "" + interaction.targetUser.id,
                     reporter: "" + interaction.user.id,
                     reason: "" + modalsubmit.fields.getTextInputValue('reason'),
-                    reporttype: "user"
+                    reporttype: "user",
+                    time:discord.time(new Date(), discord.TimestampStyles.RelativeTime)
                 })
 
                 var udb = getdb(`reportuser`)
