@@ -1,4 +1,5 @@
 const discord = require('discord.js');
+const dnd = require('../icons/data.json')
 
 /**
  * 
@@ -20,6 +21,8 @@ const discord = require('discord.js');
 
 module.exports.run = (client, consoledata, getdb, channel) => {
     consoledata.log("Start Reporthandler")
+    var reports = getdb(`reports`)
+    var udb = getdb(`reportuser`)
 
     client.on('interactionCreate', async interaction => {
         var db = getdb(`reportengin`)
@@ -121,8 +124,126 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                         break;
                 }
             }
+            if (interaction.commandName == "reportinfo") {
+                const din = interaction.options.getString("reportid")
+                if (din == "ALL") {
+                    var data = udb.get(`${interaction.guildId}-all`)
+                    if (!data) {
+                        const embed = new discord.EmbedBuilder()
+                            .setTitle("Alle Reportid's des Servers")
+                            .setColor("Orange")
+                            .setFooter({text:"By " + dnd.byt})
+                            .setFields({ name: "Reports", value: "Keine Reports bis jetzt vorhanden!" })
+                            return interaction.reply({ embeds: [embed] })
+                    }
+                    data = data.reports
+                    var m = "";
+                    const embed = new discord.EmbedBuilder()
+                        .setTitle("Alle Reportid's des Servers")
+                        .setColor("Orange")
+                        .setFooter({text:"By " + dnd.byt})
+                    if (data.length == 0) {
+                        embed.setFields({ name: "Reports", value: "Keine Reports bis jetzt vorhanden!" })
+                        return interaction.reply({ embeds: [embed] })
+                    }
+                    for (let i = 0; i < data.length; i++) {
+                        var t = m;
+                        m = m + data[i] + "\n";
+                        if (m >= 4000) {
+                            m = t
+                        }
+                    }
+                    embed.setFields({ name: "Reports Insgesammt", value: "" + data.length })
+                    embed.setDescription("**ReportID's:**\n" + m)
+                    return interaction.reply({ embeds: [embed] })
+                }
+                var datau = udb.get(`${interaction.guildId}-${din}`)
+                if (datau) {
+                    var data = datau.reports
+                    var m = "";
+                    const embed = new discord.EmbedBuilder()
+                        .setTitle("Alle Reportid's des Users " + client.users.cache.get(din).tag)
+                        .setColor("Orange")
+                        .setFooter({text:"By " + dnd.byt})
+                    if (data.length == 0) {
+                        embed.setFields({ name: "Reports", value: "Keine Reports bis jetzt vorhanden!" })
+                        return interaction.reply({ embeds: [embed] })
+                    }
+                    for (let i = 0; i < data.length; i++) {
+                        var t = m;
+                        m = m + data[i] + "\n";
+                        if (m >= 4000) {
+                            m = t
+                        }
+                    }
+                    embed.setFields({ name: "Reports Insgesammt", value: "" + data.length })
+                    embed.setDescription("**ReportID's**:\n" + m)
+                    return interaction.reply({ embeds: [embed] })
+                }
+                datau = reports.get(`${din}`)
+                if (datau) {
+                    if (datau.reporttype == "user") {
+                        const embed = new discord.EmbedBuilder()
+                            .setTitle("Report " + din)
+                            .setColor("Red")
+                            .setFooter({text:"By " + dnd.byt})
+                            .setFields(
+                                {
+                                    name: "Reporteduser",
+                                    value: "" + datau.reporteduser + "\n||<@" + datau.reporteduser + ">||"
+                                },
+                                {
+                                    name: "Reporter",
+                                    value: "" + datau.reporter + "\n||<@" + datau.reporter + ">||"
+                                },
+                                {
+                                    name: "Reporttype",
+                                    value: "" + datau.reporttype
+                                },
+                                {
+                                    name: "Reason",
+                                    value: "" + datau.reason
+                                },
+                                {
+                                    name: "Zeit",
+                                    value: "" + datau.time
+                                }
+                            )
+                        return interaction.reply({ embeds: [embed] })
+                    }
+                    if (datau.reporttype == "message") {
+                        const embed = new discord.EmbedBuilder()
+                            .setTitle("Report " + din)
+                            .setColor("Red")
+                            .setFooter({text:"By " + dnd.byt})
+                            .setFields(
+                                {
+                                    name: "Reporteduser",
+                                    value: "" + datau.reporteduser + "\n||<@" + datau.reporteduser + ">||"
+                                },
+                                {
+                                    name: "Reporter",
+                                    value: "" + datau.reporter + "\n||<@" + datau.reporter + ">||"
+                                },
+                                {
+                                    name: "Reporttype",
+                                    value: "" + datau.reporttype
+                                },
+                                {
+                                    name: "Message",
+                                    value: "" + datau.reportedmessage.content + "\n||[Link](" + datau.reportedmessage.link + ")||"
+                                },
+                                {
+                                    name: "Zeit",
+                                    value: "" + datau.time
+                                }
+                            )
+                        return interaction.reply({ embeds: [embed] })
+                    }
+                }
+                return interaction.reply({ content: "Keine Verfügbaren daten! Bitte überprüfe deine Angaben", ephemeral: true })
+            }
         }
-        var reports = getdb(`reports`)
         if (interaction.commandType == discord.ApplicationCommandType.Message) {
             if (interaction.commandName == "report") {
                 if (!db.get(`${interaction.guildId}`) || !db.get(`${interaction.guildId}`).user || !db.get(`${interaction.guildId}`).user.aktiv || db.get(`${interaction.guildId}`).user.aktiv != true) { return interaction.reply({ content: "Deaktiviert!", ephemeral: true }) }
@@ -154,13 +275,11 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                             name: "Reporter",
                             value: "" + interaction.user.tag + "\n||<@" + interaction.user.id + ">||",
                             inline: false
-                        },{
-                            name:"Zeit",
-                            value:"" + discord.time(new Date(), discord.TimestampStyles.RelativeTime)
-                        }
+                        }, {
+                        name: "Zeit",
+                        value: "" + discord.time(new Date(), discord.TimestampStyles.RelativeTime)
+                    }
                     )
-
-                consoledata.log(JSON.stringify(interaction.targetMessage))
                 reports.set(`${rid}`, {
                     reporteduser: "" + interaction.targetMessage.author.id,
                     reportedmessage: {
@@ -169,10 +288,9 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                     },
                     reporter: "" + interaction.user.id,
                     reporttype: "message",
-                    time:discord.time(new Date(), discord.TimestampStyles.RelativeTime)
+                    time: discord.time(new Date(), discord.TimestampStyles.RelativeTime)
                 })
 
-                var udb = getdb(`reportuser`)
                 if (!udb.get(`${interaction.guildId}-all`)) {
                     udb.set(`${interaction.guildId}-all`, {
                         reports: [rid]
@@ -250,10 +368,10 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                             name: "Grund",
                             value: "" + modalsubmit.fields.getTextInputValue('reason'),
                             inline: false
-                        },{
-                            name:"Zeit",
-                            value:"" + discord.time(new Date(), discord.TimestampStyles.RelativeTime)
-                        }
+                        }, {
+                        name: "Zeit",
+                        value: "" + discord.time(new Date(), discord.TimestampStyles.RelativeTime)
+                    }
                     )
 
                 reports.set(`${rid}`, {
@@ -261,10 +379,9 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                     reporter: "" + interaction.user.id,
                     reason: "" + modalsubmit.fields.getTextInputValue('reason'),
                     reporttype: "user",
-                    time:discord.time(new Date(), discord.TimestampStyles.RelativeTime)
+                    time: discord.time(new Date(), discord.TimestampStyles.RelativeTime)
                 })
 
-                var udb = getdb(`reportuser`)
                 if (!udb.get(`${interaction.guildId}-all`)) {
                     udb.set(`${interaction.guildId}-all`, {
                         reports: [rid]
