@@ -48,6 +48,23 @@ module.exports.run = (client, consoledata) => {
                 })
             }
 
+            if (!commands.find(c => c.name == "reportinfo")) {
+                client.application.commands.create({
+                    name:"reportinfo",
+                    description:"Richte das Report System ein",
+                    dmPermission: false,
+                    type:discord.ApplicationCommandType.ChatInput,
+                    options:[
+                        {
+                            name:"reportid",
+                            description:"Die Reportid / Userid / ``ALL``",
+                            type:discord.ApplicationCommandOptionType.String,
+                            required:true
+                        }
+                    ]
+                })
+            }
+
             if (!commands.find(c => c.name == "setupreport")) {
                 client.application.commands.create({
                     name: "setupreport",
