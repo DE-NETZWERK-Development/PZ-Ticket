@@ -1,0 +1,21 @@
+{
+    "reports": {
+        "title": "Alle Reportid's des Servers",
+        "fields": {
+            "nreports": {
+                "name": "Reports",
+                "value": "Keine Reports bis jetzt vorhanden!"
+            },
+            "reports": {
+                "name": "Reports Insgesammt",
+                "value": "§{rlength}"
+            }
+        },
+        "description": "**ReportID's**:\n§{rids}",
+        "color": "Orange",
+        "footer": {
+            "text": "DE Netzwerk",
+            "url": "https://discord.gg/b5SuaEzwvG"
+        }
+    }
+}
