@@ -1,6 +1,6 @@
 {
     "reports": {
-        "title": "Alle Reportid's des Servers",
+        "title": "Alle Reportid's des Servers / Users",
         "fields": {
             "nreports": {
                 "name": "Reports",
@@ -8,10 +8,10 @@
             },
             "reports": {
                 "name": "Reports Insgesammt",
-                "value": "§{rlength}"
+                "value": "${rlength}"
             }
         },
-        "description": "**ReportID's**:\n§{rids}",
+        "description": "**ReportID's**:\n${rids}",
         "color": "Orange",
         "footer": {
             "text": "DE Netzwerk",
