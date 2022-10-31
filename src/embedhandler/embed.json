@@ -1,21 +1,59 @@
 {
     "reports": {
-        "title": "Alle Reportid's des Servers",
+        "title1": "Alle Reportid's des Servers / Users",
+        "title2": "Reportübersicht des Reports: ${rid}",
         "fields": {
             "nreports": {
                 "name": "Reports",
                 "value": "Keine Reports bis jetzt vorhanden!"
             },
-            "reports": {
+            "reportsua": {
                 "name": "Reports Insgesammt",
-                "value": "§{rlength}"
-            }
+                "value": "${rlength}"
+            },
+            "reportsu": [
+                {
+                    "name": "Reporteduser",
+                    "value": "${reporteduser}\n||<@${reporteduser}>||"
+                },
+                {
+                    "name": "Reporter",
+                    "value": "${reporter}\n||<@${reporter}>||"
+                },
+                {
+                    "name": "Reason",
+                    "value": "${reason}"
+                },
+                {
+                    "name": "Zeit",
+                    "value": "${time}"
+                }
+            ],
+            "reportsm":[
+                {
+                    "name": "Reporteduser",
+                    "value": "${reporteduser}\n||<@${reporteduser}>||"
+                },
+                {
+                    "name": "Reporter",
+                    "value": "${reporter}\n||<@${reporter}>||"
+                },
+                {
+                    "name": "Message",
+                    "value": "${reportedmessage.content}\n||[Link](${reportedmessage.link})||"
+                },
+                {
+                    "name": "Zeit",
+                    "value": "${time}"
+                }
+            ]
         },
-        "description": "**ReportID's**:\n§{rids}",
+        "description": "**ReportID's**:\n${rids}",
         "color": "Orange",
         "footer": {
-            "text": "DE Netzwerk",
-            "url": "https://discord.gg/b5SuaEzwvG"
+            "text": "DE Netzwerk - Support Server: https://discord.gg/b5SuaEzwvG",
+            "url": "https://discord.gg/b5SuaEzwvG",
+            "iconURL":"https://cdn.discordapp.com/attachments/1008758904622166018/1032999513318752396/unknown.png"
         }
     }
 }
