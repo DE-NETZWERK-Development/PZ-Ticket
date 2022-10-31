@@ -32,6 +32,11 @@ module.exports.embedh = async (type, data) => {
         if (!data.title) data.title = emddata.reports.title2
         if (!data.color) data.color = emddata.reports.color
         if (!data.footer) data.footer = emddata.reports.footer
+        
+    if (type == "reportids") {
+        if (!data.title) data.title = emddata.reports.title
+        if (!data.color) data.color = emddata.reports.color
+        if (!data.footer) data.footer = emddata.reports.footer
         if (data.reports.tar == false) {
             if (!data.fields) data.fields = emddata.reports.fields.nreports
 
@@ -45,6 +50,7 @@ module.exports.embedh = async (type, data) => {
             if (!data.thumbnail) { } else { embed.setThumbnail(data.thumbnail) }
             return embed
         }
+
 
         if (data.reports.uom == true) {
             if (data.title.includes("${rid}")) data.title = data.title.replace("${rid}", data.reports.rids.rid)
@@ -109,6 +115,22 @@ module.exports.embedh = async (type, data) => {
 
         if (!data.description) data.description = emddata.reports.description
         if (!data.fields) data.fields = emddata.reports.fields.reportsua
+        if (data.reports.rids.length == 0) {
+            return interaction.reply({ embeds: [await this.embedh("reportids", { reports: { tar: false } })] })
+        }
+
+        var rids = "";
+        for (let i = 0; i < data.reports.rids.length; i++) {
+            var t = rids;
+            rids = rids + data.reports.rids[i] + "\n"
+            if (rids >= 4000) {
+                rids = t
+            }
+        }
+
+        if (!data.description) data.description = emddata.reports.description
+        if (!data.fields) data.fields = emddata.reports.fields.reports
+
         if (data.description.includes("${rids}")) data.description = data.description.replace("${rids}", rids)
         if (data.fields.value.includes("${rlength}")) data.fields.value = data.fields.value.replace("${rlength}", data.reports.rids.length)
 
