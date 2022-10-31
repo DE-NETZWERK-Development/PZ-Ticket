@@ -1,5 +1,6 @@
 const discord = require('discord.js');
 const dnd = require('../icons/data.json')
+const { embedh } = require("../embedhandler/index.js")
 
 /**
  * 
@@ -25,6 +26,7 @@ module.exports.run = (client, consoledata, getdb, channel) => {
     var udb = getdb(`reportuser`)
 
     client.on('interactionCreate', async interaction => {
+        consoledata.log("TEST")
         var db = getdb(`reportengin`)
         if (interaction.commandType == discord.ApplicationCommandType.ChatInput) {
             if (interaction.commandName == "setupreport") {
@@ -129,116 +131,24 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                 if (din == "ALL") {
                     var data = udb.get(`${interaction.guildId}-all`)
                     if (!data) {
-                        const embed = new discord.EmbedBuilder()
-                            .setTitle("Alle Reportid's des Servers")
-                            .setColor("Orange")
-                            .setFooter({text:"By " + dnd.byt})
-                            .setFields({ name: "Reports", value: "Keine Reports bis jetzt vorhanden!" })
-                            return interaction.reply({ embeds: [embed] })
+                        return interaction.reply({ embeds: [await embedh("reportids", { reports: { tar: false }, author: { name: interaction.guild.name, iconURL: interaction.guild.iconURL({ dynamics: true }) } })] })
                     }
                     data = data.reports
-                    var m = "";
-                    const embed = new discord.EmbedBuilder()
-                        .setTitle("Alle Reportid's des Servers")
-                        .setColor("Orange")
-                        .setFooter({text:"By " + dnd.byt})
-                    if (data.length == 0) {
-                        embed.setFields({ name: "Reports", value: "Keine Reports bis jetzt vorhanden!" })
-                        return interaction.reply({ embeds: [embed] })
-                    }
-                    for (let i = 0; i < data.length; i++) {
-                        var t = m;
-                        m = m + data[i] + "\n";
-                        if (m >= 4000) {
-                            m = t
-                        }
-                    }
-                    embed.setFields({ name: "Reports Insgesammt", value: "" + data.length })
-                    embed.setDescription("**ReportID's:**\n" + m)
-                    return interaction.reply({ embeds: [embed] })
+                    return interaction.reply({ embeds: [await embedh("reportids", { reports: { tar: true, rids: data }, author: { name: interaction.guild.name, iconURL: interaction.guild.iconURL({ dynamics: true }) } })] })
                 }
                 var datau = udb.get(`${interaction.guildId}-${din}`)
                 if (datau) {
-                    var data = datau.reports
-                    var m = "";
-                    const embed = new discord.EmbedBuilder()
-                        .setTitle("Alle Reportid's des Users " + client.users.cache.get(din).tag)
-                        .setColor("Orange")
-                        .setFooter({text:"By " + dnd.byt})
-                    if (data.length == 0) {
-                        embed.setFields({ name: "Reports", value: "Keine Reports bis jetzt vorhanden!" })
-                        return interaction.reply({ embeds: [embed] })
-                    }
-                    for (let i = 0; i < data.length; i++) {
-                        var t = m;
-                        m = m + data[i] + "\n";
-                        if (m >= 4000) {
-                            m = t
-                        }
-                    }
-                    embed.setFields({ name: "Reports Insgesammt", value: "" + data.length })
-                    embed.setDescription("**ReportID's**:\n" + m)
-                    return interaction.reply({ embeds: [embed] })
+                    return interaction.reply({ embeds: [await embedh("reportids", { reports: { tar: true, rids: datau }, author: { name: interaction.guild.members.cache.get(din).user.tag, iconURL: interaction.guild.members.cache.get(din).displayAvatarURL({}) } })] })
                 }
                 datau = reports.get(`${din}`)
                 if (datau) {
                     if (datau.reporttype == "user") {
-                        const embed = new discord.EmbedBuilder()
-                            .setTitle("Report " + din)
-                            .setColor("Red")
-                            .setFooter({text:"By " + dnd.byt})
-                            .setFields(
-                                {
-                                    name: "Reporteduser",
-                                    value: "" + datau.reporteduser + "\n||<@" + datau.reporteduser + ">||"
-                                },
-                                {
-                                    name: "Reporter",
-                                    value: "" + datau.reporter + "\n||<@" + datau.reporter + ">||"
-                                },
-                                {
-                                    name: "Reporttype",
-                                    value: "" + datau.reporttype
-                                },
-                                {
-                                    name: "Reason",
-                                    value: "" + datau.reason
-                                },
-                                {
-                                    name: "Zeit",
-                                    value: "" + datau.time
-                                }
-                            )
-                        return interaction.reply({ embeds: [embed] })
+                        datau.rid = din
+                        return interaction.reply({ embeds: [await embedh("reportids", { reports: { tar: true, rids: datau, uom: true }, author: { name: interaction.guild.members.cache.get(datau.reporteduser).user.tag, iconURL: interaction.guild.members.cache.get(datau.reporteduser).displayAvatarURL() } })] })
                     }
                     if (datau.reporttype == "message") {
-                        const embed = new discord.EmbedBuilder()
-                            .setTitle("Report " + din)
-                            .setColor("Red")
-                            .setFooter({text:"By " + dnd.byt})
-                            .setFields(
-                                {
-                                    name: "Reporteduser",
-                                    value: "" + datau.reporteduser + "\n||<@" + datau.reporteduser + ">||"
-                                },
-                                {
-                                    name: "Reporter",
-                                    value: "" + datau.reporter + "\n||<@" + datau.reporter + ">||"
-                                },
-                                {
-                                    name: "Reporttype",
-                                    value: "" + datau.reporttype
-                                },
-                                {
-                                    name: "Message",
-                                    value: "" + datau.reportedmessage.content + "\n||[Link](" + datau.reportedmessage.link + ")||"
-                                },
-                                {
-                                    name: "Zeit",
-                                    value: "" + datau.time
-                                }
-                            )
-                        return interaction.reply({ embeds: [embed] })
+                        datau.rid = din
+                        return interaction.reply({ embeds: [await embedh("reportids", { reports: { tar: true, rids: datau, uom: false }, author: { name: interaction.guild.members.cache.get(datau.reporteduser).user.tag, iconURL: interaction.guild.members.cache.get(datau.reporteduser).displayAvatarURL() } })] })
                     }
                 }
                 return interaction.reply({ content: "Keine Verfügbaren daten! Bitte überprüfe deine Angaben", ephemeral: true })
@@ -415,5 +325,4 @@ module.exports.run = (client, consoledata, getdb, channel) => {
             }
         }
     })
-
 }
