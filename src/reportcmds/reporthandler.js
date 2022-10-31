@@ -138,6 +138,9 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                 }
                 var datau = udb.get(`${interaction.guildId}-${din}`)
                 if (datau) {
+
+                    return interaction.reply({ embeds: [await embedh("reportids", { reports: { tar: true, rids: datau }, author: { name: interaction.guild.members.cache.get(din).user.tag, iconURL: interaction.guild.members.cache.get(din).displayAvatarURL({}) } })] })
+
                     var data = datau.reports
                     var m = "";
                     const embed = new discord.EmbedBuilder()
@@ -158,10 +161,19 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                     embed.setFields({ name: "Reports Insgesammt", value: "" + data.length })
                     embed.setDescription("**ReportID's**:\n" + m)
                     return interaction.reply({ embeds: [embed] })
+
                 }
                 datau = reports.get(`${din}`)
                 if (datau) {
                     if (datau.reporttype == "user") {
+
+                        datau.rid = din
+                        return interaction.reply({ embeds: [await embedh("reportids", { reports: { tar: true, rids: datau, uom: true }, author: { name: interaction.guild.members.cache.get(datau.reporteduser).user.tag, iconURL: interaction.guild.members.cache.get(datau.reporteduser).displayAvatarURL() } })] })
+                    }
+                    if (datau.reporttype == "message") {
+                        datau.rid = din
+                        return interaction.reply({ embeds: [await embedh("reportids", { reports: { tar: true, rids: datau, uom: false }, author: { name: interaction.guild.members.cache.get(datau.reporteduser).user.tag, iconURL: interaction.guild.members.cache.get(datau.reporteduser).displayAvatarURL() } })] })
+
                         const embed = new discord.EmbedBuilder()
                             .setTitle("Report " + din)
                             .setColor("Red")
@@ -218,6 +230,7 @@ module.exports.run = (client, consoledata, getdb, channel) => {
                                 }
                             )
                         return interaction.reply({ embeds: [embed] })
+
                     }
                 }
                 return interaction.reply({ content: "Keine Verfügbaren daten! Bitte überprüfe deine Angaben", ephemeral: true })
